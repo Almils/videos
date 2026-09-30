@@ -23,7 +23,84 @@ The narrator *is* Ika the squid. Think a friendly, slightly cheeky tech host: gr
 | 11 | NO BRIDGES. / NO WRAPPING. / JUST INK. | 43.4–47.6s | **No bridges. *(beat)* No wrapping. *(beat)* Just ink.** |
 | 12 | End card · Ika. | 47.6–52.0s | **Ika. Sign anything, on any chain.** |
 
-### Plain text (copy-paste into ElevenLabs)
+### Which tagged version to use
+
+ElevenLabs models read different markup, so there are two tagged versions below. Use the one that matches your model:
+
+| Model | Emotion / delivery | Pauses | Pronunciation |
+|---|---|---|---|
+| **Eleven v3** (recommended, most natural) | Audio tags like `[excited]`, `[deadpan]`, `[laughs]` | `[pause]`, `[short pause]`, `[long pause]`, `…`, line breaks. **No SSML.** | Spell it out (`Eeka`) |
+| **Multilingual v2 / Flash v2 / Turbo v2** | None (set with Style slider) | SSML `<break time="0.6s" />` (max 3s) | SSML `<phoneme>`: **Flash v2 & Turbo v2 only** |
+
+Don't paste SSML into v3. It will either read the tags aloud or ignore them. Newer models (v4) also skip SSML breaks, so treat them like v3.
+
+---
+
+### Version A: Eleven v3 (audio tags)
+
+```
+[cheerful] gm! I'm Eeka. [short pause] [playful] That's Japanese for… squid.
+
+[warmly] Welcome to Eeka.
+
+[pause]
+
+[conversational] Moving crypto in twenty twenty-six? [short pause] Wrap it. [short pause] Bridge it… [pause] [deadpan] and pray.
+
+[sighs] Billions later… bridges are still getting drained.
+
+[pause]
+
+[confident] Eeka flips it. [short pause] Don't move the asset. [short pause] [emphatic] Move the signature.
+
+[upbeat] Dee-wallets give your smart contract a native address on Bitcoin, Ethereum, Solana… [short pause] any chain.
+
+[matter-of-fact] Every signature needs you… [short pause] and the network. [short pause] Nobody signs alone. [smug] Not even Eeka.
+
+[fast] Sub-second signing. Ten thousand a second. Hundreds of nodes.
+
+[excited] Native Bitcoin DeFi. [short pause] AI agents with real wallets. [short pause] One program, every chain.
+
+[pause]
+
+[punchy] No bridges. [short pause] No wrapping. [pause] [laughs softly] Just ink.
+
+[pause]
+
+[warm, confident] Eeka. [short pause] Sign anything, on any chain.
+```
+
+### Version B: SSML (Multilingual v2 / Flash v2 / Turbo v2)
+
+The `<break>` lengths are sized so each line lands on its scene. The `<phoneme>` tags only work on **Flash v2 / Turbo v2**. On Multilingual v2, swap each `<phoneme …>Ika</phoneme>` for plain `Eeka`.
+
+```
+gm! I'm <phoneme alphabet="ipa" ph="ˈiːkə">Ika</phoneme>. <break time="0.3s" /> That's Japanese for... <break time="0.2s" /> squid.
+<break time="0.5s" />
+Welcome to <phoneme alphabet="ipa" ph="ˈiːkə">Ika</phoneme>.
+<break time="0.8s" />
+Moving crypto in twenty twenty-six? <break time="0.3s" /> Wrap it. <break time="0.3s" /> Bridge it... <break time="0.6s" /> and pray.
+<break time="0.7s" />
+Billions later, bridges are still getting drained.
+<break time="1.0s" />
+<phoneme alphabet="ipa" ph="ˈiːkə">Ika</phoneme> flips it. <break time="0.3s" /> Don't move the asset. <break time="0.4s" /> Move the signature.
+<break time="0.8s" />
+Dee-wallets give your smart contract a native address on Bitcoin, Ethereum, Solana... <break time="0.2s" /> any chain.
+<break time="0.6s" />
+Every signature needs you <break time="0.2s" /> and the network. <break time="0.3s" /> Nobody signs alone. <break time="0.3s" /> Not even <phoneme alphabet="ipa" ph="ˈiːkə">Ika</phoneme>.
+<break time="0.6s" />
+Sub-second signing. <break time="0.2s" /> Ten thousand a second. <break time="0.2s" /> Hundreds of nodes.
+<break time="0.7s" />
+Native Bitcoin DeFi. <break time="0.3s" /> AI agents with real wallets. <break time="0.3s" /> One program, every chain.
+<break time="0.8s" />
+No bridges. <break time="0.6s" /> No wrapping. <break time="0.7s" /> Just ink.
+<break time="1.0s" />
+<phoneme alphabet="ipa" ph="ˈiːkə">Ika</phoneme>. <break time="0.4s" /> Sign anything, on any chain.
+```
+
+ElevenLabs warns that many `<break>` tags in one generation can cause speed-ups or audio artifacts. If that happens, generate one clip per line (option B under *How to send it back*) and drop the breaks. I'll handle the spacing in the edit.
+
+### Plain text (no tags)
 
 ```
 gm! I'm Ika. That's Japanese for squid.
@@ -63,10 +140,10 @@ Ika. Sign anything, on any chain.
 
 ## ElevenLabs settings that suit this
 
-- **Model:** Eleven v3 (for the `[playful]`, `[smug]` audio tags) or Multilingual v2
+- **Model:** Eleven v3 with Version A (best), or Multilingual v2 / Flash v2 with Version B
 - **Voice:** young, bright, characterful. Something like *"Charlie"* or *"Jessica"*, or a custom voice with a grin in it
 - **Stability ~35–45%** (more expressive) · **Similarity ~75%** · **Style ~30–40%** · Speaker boost **on**
-- Optional v3 tags: `[cheerful] gm! I'm Ika…` · `[deadpan] …and pray.` · `[smug] Not even Ika.` · `[excited] Just ink.`
+- v3 tags are suggestions. If one sounds forced, delete it or regenerate. v3 varies a lot between takes, so generate 2–3 and keep the best.
 
 ## How to send it back
 
