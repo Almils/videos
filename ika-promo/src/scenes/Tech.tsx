@@ -3,6 +3,7 @@ import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {clamp, ease, easeInOut, pop, prog, rand, typed} from '../anim';
 import {Bg, ChainIcon, IkaMark, Label, Line, Mono, Pill} from '../components/ui';
 import {C, FONT, MONO} from '../theme';
+import {at} from '../timeline';
 
 const Card: React.FC<{style?: React.CSSProperties; children: React.ReactNode; dark?: boolean}> = ({style, children, dark}) => (
   <div
@@ -24,25 +25,34 @@ const Card: React.FC<{style?: React.CSSProperties; children: React.ReactNode; da
 /* 6 ─ The Flip: don't move the asset, move the signature */
 export const FlipScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const strike = prog(f, 66, 14);
-  const flip = prog(f, 84, 22, easeInOut);
-  const dontOut = prog(f, 82, 8);
+  const move2 = at('flip', 'move2');
+  const strike = prog(f, at('flip', 'asset', 16), 12);
+  const flip = prog(f, move2 + 2, 20, easeInOut);
+  const dontOut = prog(f, move2 - 4, 8);
+  const flipsPill = pop(f, at('flip', 'ikaFlip', -3));
+  const flipsOut = prog(f, at('flip', 'dont', -8), 8);
 
   // diagram
-  const bridgeIn = pop(f, 20);
-  const bridgeX = prog(f, 70, 14);
-  const sigIn = prog(f, 110, 60, easeInOut);
-  const ok = pop(f, 172);
+  const bridgeIn = pop(f, at('flip', 'ikaFlip', -6));
+  const bridgeX = prog(f, at('flip', 'flips'), 14);
+  const sigAt = at('flip', 'signature', -4);
+  const sigIn = prog(f, sigAt, 40, easeInOut);
+  const ok = pop(f, sigAt + 38);
 
   return (
     <AbsoluteFill>
       <Bg color={C.ink} dots="rgba(255,255,255,0.05)" />
       <div style={{position: 'absolute', left: 120, top: 250}}>
         <Label n="01" text="The flip" color={C.pink} start={2} />
+        <div style={{position: 'absolute', top: 70, opacity: 1 - flipsOut, transform: `translateY(${flipsOut * -30}px)`}}>
+          <Pill start={at('flip', 'ikaFlip', -3)} bg={C.pink} size={96} rot={-3 * flipsPill}>
+            Ika flips it. ↻
+          </Pill>
+        </div>
         <div style={{height: 24}} />
         <div style={{position: 'relative', height: 136}}>
           <div style={{opacity: 1 - dontOut, transform: `translateY(${dontOut * -40}px)`}}>
-            <Line start={6} size={120}>
+            <Line start={at('flip', 'dont', -3)} size={120}>
               Don't move
             </Line>
           </div>
@@ -53,7 +63,7 @@ export const FlipScene: React.FC<{d: number}> = ({d}) => {
         <div style={{position: 'relative', height: 150}}>
           {/* card-flip: squash "the asset." shut, pop "the signature." open */}
           <div style={{position: 'absolute', top: 0, transform: `scaleY(${Math.max(0, 1 - flip * 2)})`, transformOrigin: '50% 55%'}}>
-            <Line start={12} size={120} color="rgba(255,255,255,0.9)">
+            <Line start={at('flip', 'asset', -5)} size={120} color="rgba(255,255,255,0.9)">
               the asset.
             </Line>
             <div style={{position: 'absolute', left: -10, top: 62, height: 12, width: 560 * strike, background: C.pink, borderRadius: 6}} />
@@ -135,7 +145,7 @@ export const FlipScene: React.FC<{d: number}> = ({d}) => {
             left: -40,
             top: 250,
             transform: `scale(${bridgeIn}) rotate(-4deg)`,
-            opacity: 1 - prog(f, 100, 16),
+            opacity: 1 - prog(f, sigAt - 16, 14),
           }}
         >
           <div
@@ -165,7 +175,7 @@ export const FlipScene: React.FC<{d: number}> = ({d}) => {
             strokeWidth={5}
             strokeDasharray="12 12"
             strokeDashoffset={-f * 1.5}
-            opacity={prog(f, 104, 10)}
+            opacity={prog(f, sigAt - 10, 10)}
           />
         </svg>
         {(() => {
@@ -220,24 +230,25 @@ const CHAINS = [
 
 export const DWalletScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const center = pop(f, 16);
+  const center = pop(f, at('dwallet', 'smart', -3));
+  const chainAt = [at('dwallet', 'bitcoin', -3), at('dwallet', 'ethereum', -3), at('dwallet', 'solana', -3), at('dwallet', 'anyChain', -3)];
   return (
     <AbsoluteFill>
       <Bg color={C.violet} dots="rgba(255,255,255,0.12)" />
       <div style={{position: 'absolute', left: 120, top: 250}}>
         <Label n="02" text="dWallets" color="#fff" start={2} />
         <div style={{height: 24}} />
-        <Line start={6} size={116}>
+        <Line start={at('dwallet', 'dwallets', -3)} size={116}>
           One program.
         </Line>
-        <Line start={14} size={116}>
+        <Line start={at('dwallet', 'anyChain', -4)} size={116}>
           Every chain.
         </Line>
         <div style={{display: 'flex', gap: 14, marginTop: 40}}>
-          <Pill start={150} bg="#fff" color={C.violet} size={34}>
+          <Pill start={at('dwallet', 'bitcoin', 20)} bg="#fff" color={C.violet} size={34}>
             ✓ native addresses
           </Pill>
-          <Pill start={162} bg={C.ink} size={34}>
+          <Pill start={at('dwallet', 'solana', 20)} bg={C.ink} size={34}>
             ✓ zero wrapping
           </Pill>
         </div>
@@ -246,7 +257,7 @@ export const DWalletScene: React.FC<{d: number}> = ({d}) => {
       <div style={{position: 'absolute', left: 1000, top: 100, width: 860, height: 880}}>
         <svg width={860} height={880} style={{position: 'absolute', overflow: 'visible'}}>
           {CHAINS.map((c, i) => {
-            const t = prog(f, 40 + i * 14, 24);
+            const t = prog(f, chainAt[i] - 16, 16);
             const x1 = 430;
             const y1 = 440;
             const x2 = c.x + 130;
@@ -255,14 +266,14 @@ export const DWalletScene: React.FC<{d: number}> = ({d}) => {
               <g key={i}>
                 <line x1={x1} y1={y1} x2={x1 + (x2 - x1) * t} y2={y1 + (y2 - y1) * t} stroke="#fff" strokeWidth={4} strokeDasharray="10 10" strokeDashoffset={f * -1.2} opacity={0.7} />
                 {t >= 1 && (
-                  <circle cx={x1 + (x2 - x1) * (((f - 64 - i * 14) / 50) % 1)} cy={y1 + (y2 - y1) * (((f - 64 - i * 14) / 50) % 1)} r={7} fill={C.yellow} />
+                  <circle cx={x1 + (x2 - x1) * (((f - chainAt[i]) / 50) % 1)} cy={y1 + (y2 - y1) * (((f - chainAt[i]) / 50) % 1)} r={7} fill={C.yellow} />
                 )}
               </g>
             );
           })}
         </svg>
         {CHAINS.map((c, i) => {
-          const s = pop(f, 56 + i * 14);
+          const s = pop(f, chainAt[i]);
           return (
             <Card key={c.name} style={{left: c.x, top: c.y, width: 280, padding: 22, transform: `scale(${s})`}}>
               <div style={{display: 'flex', alignItems: 'center', gap: 14}}>
@@ -294,7 +305,7 @@ export const DWalletScene: React.FC<{d: number}> = ({d}) => {
           <div style={{fontWeight: 800, fontSize: 36, marginTop: 6}}>your_program</div>
           <div style={{display: 'flex', gap: 8, marginTop: 14}}>
             {[C.btc, C.eth, C.sol, C.sui].map((col, i) => (
-              <div key={i} style={{width: 34, height: 8, borderRadius: 4, background: col, opacity: prog(f, 56 + i * 14, 10)}} />
+              <div key={i} style={{width: 34, height: 8, borderRadius: 4, background: col, opacity: prog(f, chainAt[i], 10)}} />
             ))}
           </div>
         </Card>
@@ -306,12 +317,14 @@ export const DWalletScene: React.FC<{d: number}> = ({d}) => {
 /* 8 ─ Zero-trust 2PC-MPC: you + ⅔ of the network */
 export const ZeroTrustScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const toggle = prog(f, 40, 12);
+  const toggle = prog(f, at('zerotrust', 'notEven', -2), 10);
+  const litAt = at('zerotrust', 'network', -8);
+  const alone = at('zerotrust', 'alone', -4);
   const N = 12;
-  const lit = Math.min(N, Math.floor(Math.max(0, f - 60) / 5));
+  const lit = Math.min(N, Math.floor(Math.max(0, f - litAt) / 3));
   const threshold = Math.ceil((N * 2) / 3);
-  const merge = prog(f, 140, 26, easeInOut);
-  const sealed = pop(f, 164);
+  const merge = prog(f, alone, 22, easeInOut);
+  const sealed = pop(f, alone + 18);
   const cx = 1440;
   const cy = 540;
   return (
@@ -320,10 +333,10 @@ export const ZeroTrustScene: React.FC<{d: number}> = ({d}) => {
       <div style={{position: 'absolute', left: 120, top: 250}}>
         <Label n="03" text="2PC-MPC" color={C.lime} start={2} />
         <div style={{height: 24}} />
-        <Line start={6} size={120}>
+        <Line start={at('zerotrust', 'nobody', -3)} size={120}>
           Nobody
         </Line>
-        <Line start={12} size={120} color={C.lime}>
+        <Line start={at('zerotrust', 'signs', -3)} size={120} color={C.lime}>
           signs alone.
         </Line>
         <div style={{display: 'flex', alignItems: 'center', gap: 16, marginTop: 44}}>
@@ -347,7 +360,7 @@ export const ZeroTrustScene: React.FC<{d: number}> = ({d}) => {
           const x = cx + 110 + Math.cos(a) * 230 * (1 - merge * 0.55);
           const y = cy + Math.sin(a) * 230 * (1 - merge * 0.55);
           const on = i < lit;
-          const s = pop(f, 20 + i * 2);
+          const s = pop(f, 8 + i * 2);
           return (
             <g key={i}>
               {on && <line x1={x} y1={y} x2={cx + 110} y2={cy} stroke={C.lime} strokeWidth={2} opacity={0.35 * (1 - merge)} />}
@@ -392,7 +405,7 @@ export const ZeroTrustScene: React.FC<{d: number}> = ({d}) => {
           fontWeight: 800,
           fontSize: 30,
           color: '#fff',
-          transform: `scale(${pop(f, 24)})`,
+          transform: `scale(${pop(f, at('zerotrust', 'you', -3))})`,
           boxShadow: `0 0 40px ${C.pink}88`,
           opacity: 1 - sealed,
         }}
@@ -432,9 +445,9 @@ export const ZeroTrustScene: React.FC<{d: number}> = ({d}) => {
 export const SpeedScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
   const stats = [
-    {big: '<1s', unit: 'signing latency', start: 16, color: C.ink},
-    {big: '10,000', unit: 'signatures / sec', start: 46, color: C.ink, count: 10000},
-    {big: '100s', unit: 'of signer nodes', start: 76, color: C.ink},
+    {big: '<1s', unit: 'signing latency', start: at('speed', 'sub', -3), color: C.ink},
+    {big: '10,000', unit: 'signatures / sec', start: at('speed', 'ten', -3), color: C.ink, count: 10000},
+    {big: '100s', unit: 'of signer nodes', start: at('speed', 'hundreds', -3), color: C.ink},
   ];
   return (
     <AbsoluteFill>
@@ -454,7 +467,7 @@ export const SpeedScene: React.FC<{d: number}> = ({d}) => {
       <div style={{position: 'absolute', left: 120, right: 120, top: 330, display: 'flex', justifyContent: 'space-between'}}>
         {stats.map((s, i) => {
           const p = pop(f, s.start, {damping: 12, stiffness: 200});
-          const n = s.count ? Math.round(interpolate(f, [s.start, s.start + 40], [0, s.count], {...clamp, easing: ease})) : null;
+          const n = s.count ? Math.round(interpolate(f, [s.start, s.start + 36], [0, s.count], {...clamp, easing: ease})) : null;
           return (
             <div key={i} style={{transform: `translateY(${(1 - p) * 120}px)`, opacity: Math.min(1, p * 1.5)}}>
               <div style={{fontFamily: FONT, fontWeight: 900, fontSize: 190, letterSpacing: '-0.06em', color: s.color, lineHeight: 1}}>
@@ -466,7 +479,7 @@ export const SpeedScene: React.FC<{d: number}> = ({d}) => {
         })}
       </div>
       <div style={{position: 'absolute', left: 120, bottom: 150, right: 120, display: 'flex', justifyContent: 'flex-end'}}>
-        <Pill start={120} bg={C.ink} size={44} rot={-2}>
+        <Pill start={at('speed', 'hundreds', 18)} bg={C.ink} size={44} rot={-2}>
           the fastest zero-trust MPC network
         </Pill>
       </div>
@@ -542,14 +555,14 @@ export const BuildScene: React.FC<{d: number}> = ({d}) => {
       </Card>
 
       <div style={{position: 'absolute', left: 1040, top: 650, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 20}}>
-        <Pill start={150} bg={C.btc} size={40} rot={-2}>
+        <Pill start={at('build', 'native', -3)} bg={C.btc} size={40} rot={-2}>
           ₿ Native BTC DeFi
         </Pill>
-        <Pill start={164} bg={C.violet} size={40} rot={2}>
+        <Pill start={at('build', 'ai', -3)} bg={C.violet} size={40} rot={2}>
           🤖 AI agents w/ real wallets
         </Pill>
-        <Pill start={178} bg={C.ink} size={40} rot={-1}>
-          🏦 Multichain custody
+        <Pill start={at('build', 'oneProgram', -3)} bg={C.ink} size={40} rot={-1}>
+          🌐 One program, every chain
         </Pill>
       </div>
     </AbsoluteFill>

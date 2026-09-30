@@ -12,6 +12,6 @@ export const RemotionRoot: React.FC = () => (
     fps={FPS}
     width={W}
     height={H}
-    defaultProps={{vo: false, music: false, sfx: true}}
+    defaultProps={{vo: true, music: false, sfx: true}}
   />
 );

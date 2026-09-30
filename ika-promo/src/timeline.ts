@@ -1,7 +1,9 @@
 import {FPS} from './theme';
+import vo from './vo.json';
 
-// Every scene's length lives here. When the ElevenLabs voice-over lands,
-// only these durations need re-timing to the audio.
+// Scene starts and every animation cue come from a forced alignment of the
+// ElevenLabs read (scripts/align_vo.py → src/vo.json). Times in vo.json
+// are seconds on the voice-over's own clock; the VO starts after the logo pre-roll.
 export type SceneId =
   | 'logo'
   | 'hello'
@@ -16,40 +18,36 @@ export type SceneId =
   | 'slam'
   | 'end';
 
-export type Scene = {
-  id: SceneId;
-  seconds: number;
-  vo: string;
-};
-
-export const SCENES: Scene[] = [
-  {id: 'logo', seconds: 2.2, vo: ''},
-  {id: 'hello', seconds: 3.6, vo: "gm! I'm Ika. That's Japanese for squid."},
-  {id: 'welcome', seconds: 2.6, vo: 'Welcome to Ika.'},
-  {id: 'status', seconds: 5.2, vo: 'Moving crypto in 2026: wrap it, bridge it… and pray.'},
-  {id: 'drained', seconds: 4.4, vo: 'Billions later, bridges are still getting drained.'},
-  {id: 'flip', seconds: 5.0, vo: "Ika flips it. Don't move the asset. Move the signature."},
-  {id: 'dwallet', seconds: 5.6, vo: 'dWallets give your smart contract a native address on Bitcoin, Ethereum, Solana — any chain.'},
-  {id: 'zerotrust', seconds: 5.4, vo: 'Every signature needs you and the network. Nobody signs alone. Not even Ika.'},
-  {id: 'speed', seconds: 4.4, vo: 'Sub-second signing. Ten thousand a second. Hundreds of nodes.'},
-  {id: 'build', seconds: 5.0, vo: 'Native Bitcoin DeFi. AI agents with real wallets. One program, every chain.'},
-  {id: 'slam', seconds: 4.2, vo: 'No bridges. No wrapping. Just ink.'},
-  {id: 'end', seconds: 4.4, vo: 'Ika. Sign anything, on any chain.'},
-];
+export type Cue = keyof typeof vo.cues;
 
 export const sec = (s: number) => Math.round(s * FPS);
 
-export type TimedScene = Scene & {from: number; frames: number};
+export const PREROLL = vo.preroll;
+export const VO_FROM = sec(PREROLL);
 
-export const TIMED: TimedScene[] = (() => {
-  let from = 0;
-  return SCENES.map((s) => {
-    const t = {...s, from, frames: sec(s.seconds)};
-    from += t.frames;
-    return t;
-  });
-})();
+/** Absolute video frame at which a VO word starts. */
+export const cueFrame = (c: Cue) => sec(PREROLL + vo.cues[c]);
 
-export const TOTAL_FRAMES = TIMED.reduce((a, s) => a + s.frames, 0);
+const ORDER: SceneId[] = ['logo', 'hello', 'welcome', 'status', 'drained', 'flip', 'dwallet', 'zerotrust', 'speed', 'build', 'slam', 'end'];
+const startOf = (id: SceneId) => (id === 'logo' ? 0 : sec(PREROLL + (vo.scenes as Record<string, number>)[id]));
+
+export const TOTAL_FRAMES = sec(PREROLL + vo.cues.voEnd + vo.tail);
+
+export type TimedScene = {id: SceneId; from: number; frames: number};
+
+export const TIMED: TimedScene[] = ORDER.map((id, i) => {
+  const from = startOf(id);
+  const to = i + 1 < ORDER.length ? startOf(ORDER[i + 1]) : TOTAL_FRAMES;
+  return {id, from, frames: to - from};
+});
 
 export const sceneAt = (id: SceneId) => TIMED.find((s) => s.id === id)!;
+
+/** Frame of a VO cue relative to the start of `scene` (for use inside a Sequence). */
+export const at = (scene: SceneId, c: Cue, offset = 0) => cueFrame(c) - sceneAt(scene).from + offset;
+
+/** Lip-sync level (0..1) at an absolute video frame. */
+export const talkAt = (frame: number) => {
+  const i = frame - VO_FROM;
+  return i >= 0 && i < vo.env.length ? vo.env[i] : 0;
+};

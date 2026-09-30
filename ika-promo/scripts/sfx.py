@@ -10,14 +10,13 @@ SR = 48000
 FPS = 60
 ROOT = Path(__file__).resolve().parent.parent
 
-# ── read scene durations from the timeline ──
-src = (ROOT / 'src/timeline.ts').read_text()
-scenes = re.findall(r"\{id: '(\w+)', seconds: ([\d.]+)", src)
-start, t = {}, 0
-for sid, secs in scenes:
-    start[sid] = t
-    t += round(float(secs) * FPS)
-TOTAL = t
+# ── scene starts and word cues from the aligned voice-over (src/vo.json) ──
+import json
+VO = json.loads((ROOT / 'src/vo.json').read_text())
+PRE = VO['preroll']
+start = {'logo': 0, **{k: round((PRE + v) * FPS) for k, v in VO['scenes'].items()}}
+CUE = {k: round((PRE + v) * FPS) for k, v in VO['cues'].items()}
+TOTAL = round((PRE + VO['cues']['voEnd'] + VO['tail']) * FPS)
 out = np.zeros(int(TOTAL / FPS * SR) + SR, dtype=np.float64)
 rng = np.random.default_rng(7)
 
@@ -101,54 +100,61 @@ W = whoosh(0.7)
 add(pop(380, 0.25), 6, 0.6)
 add(whoosh(0.9, 0.12), 0, 0.25)
 add(pop(620), S['hello'] + 4, 0.6)
-add(pop(900, 0.08), S['hello'] + 26, 0.25)
-add(whoosh(0.4, 0.3), S['welcome'] + 16, 0.25)
+add(pop(900, 0.08), S['hello'] + 8, 0.25)
+add(pop(760, 0.1), CUE['japanese'] - 3, 0.3)
+add(pop(980, 0.1), CUE['squid'] - 3, 0.35)
+add(whoosh(0.4, 0.3), CUE['ikaWelcome'] - 10, 0.25)
 for i in range(5):
-    add(pop(700 + i * 90, 0.07), S['welcome'] + 40 + i * 5, 0.15)
-# sweeps
+    add(pop(700 + i * 90, 0.07), CUE['ikaWelcome'] + 8 + i * 4, 0.15)
+# sweeps (centred on the cut)
 for sid in ('status', 'dwallet', 'zerotrust', 'speed', 'build'):
     add(W, S[sid] - 21, 0.45)
 add(whoosh(0.5), S['drained'] - 15, 0.45)
-# status pills
-for k, fr in enumerate((70, 100, 146)):
-    add(pop(480 + k * 120), S['status'] + fr, 0.55)
-add(pop(900, 0.08), S['status'] + 20, 0.2)
-# drained hits
-for i in range(3):
-    add(thud(), S['drained'] + 34 + i * 26, 0.9)
-    add(tick(0.05), S['drained'] + 38 + i * 26, 0.5)
+# status pills on the words
+for k, c in enumerate(('wrap', 'bridge', 'andPray')):
+    add(pop(480 + k * 120), CUE[c] - 3, 0.55)
+# drained: card slams + the word itself
+for c, off in (('later', 4), ('bridges', 2), ('still', 2)):
+    add(thud(), CUE[c] + off, 0.85)
+    add(tick(0.05), CUE[c] + off + 4, 0.45)
+add(thud(0.6), CUE['drained'], 0.6)
 # ink squirt
 add(splat(), S['flip'] - 20, 0.8)
-add(whoosh(0.35, 0.4), S['flip'] + 82, 0.35)
-add(ding(1760, 0.6), S['flip'] + 172, 0.18)
+add(pop(520), CUE['ikaFlip'] - 3, 0.45)
+add(tick(0.06), CUE['flips'], 0.5)
+add(whoosh(0.35, 0.4), CUE['move2'], 0.35)
+add(whoosh(0.7, 0.2), CUE['signature'] - 4, 0.25)
+add(ding(1760, 0.6), CUE['signature'] + 34, 0.18)
 # dwallet chains
-for i in range(4):
-    add(pop(600 + i * 110), S['dwallet'] + 56 + i * 14, 0.4)
-add(pop(420, 0.2), S['dwallet'] + 16, 0.45)
+add(pop(420, 0.2), CUE['smart'] - 3, 0.45)
+for i, c in enumerate(('bitcoin', 'ethereum', 'solana', 'anyChain')):
+    add(pop(600 + i * 110), CUE[c] - 3, 0.4)
 # zero trust
-add(tick(), S['zerotrust'] + 40, 0.6)
+add(pop(560), CUE['you'] - 3, 0.4)
 for i in range(12):
-    add(pop(1100 + i * 30, 0.05), S['zerotrust'] + 60 + i * 5, 0.18)
-add(ding(1320, 1.2), S['zerotrust'] + 164, 0.35)
+    add(pop(1100 + i * 30, 0.05), CUE['network'] - 8 + i * 3, 0.16)
+add(whoosh(0.4, 0.3), CUE['alone'] - 4, 0.3)
+add(ding(1320, 1.2), CUE['alone'] + 18, 0.35)
+add(tick(), CUE['notEven'] - 2, 0.6)
 # speed
-for k, fr in enumerate((16, 46, 76)):
-    add(pop(400 + k * 80, 0.18), S['speed'] + fr, 0.55)
+for k, c in enumerate(('sub', 'ten', 'hundreds')):
+    add(pop(400 + k * 80, 0.18), CUE[c] - 3, 0.55)
 add(whoosh(1.2, 0.5), S['speed'] + 10, 0.2)
-# build pills + typing ticks
+# build: typing + pills
 for fr in range(20, 165, 4):
-    add(tick(0.02), S['build'] + fr, 0.12)
-for k, fr in enumerate((150, 164, 178)):
-    add(pop(500 + k * 100), S['build'] + fr, 0.5)
+    add(tick(0.02), S['build'] + fr, 0.1)
+for k, c in enumerate(('native', 'ai', 'oneProgram')):
+    add(pop(500 + k * 100), CUE[c] - 3, 0.5)
 # slam
-for k, fr in enumerate((2, 64, 126)):
-    add(thud(0.8), S['slam'] + fr, 1.0)
-    add(whoosh(0.3, 0.6), S['slam'] + fr - 10, 0.3)
-add(ding(1567, 1.2), S['slam'] + 128, 0.3)
-add(ding(2093, 1.2), S['slam'] + 132, 0.2)
+for c in ('no1', 'no2', 'just'):
+    add(thud(0.8), CUE[c], 1.0)
+    add(whoosh(0.3, 0.6), CUE[c] - 12, 0.3)
+add(ding(1567, 1.2), CUE['ink'], 0.3)
+add(ding(2093, 1.2), CUE['ink'] + 4, 0.2)
 # end
-add(pop(330, 0.3), S['end'] + 6, 0.6)
+add(pop(330, 0.3), CUE['ikaEnd'] - 4, 0.6)
 add(whoosh(1.0, 0.15), S['end'], 0.3)
-add(ding(1046, 2.0), S['end'] + 14, 0.25)
+add(ding(1046, 2.0), CUE['ikaEnd'] + 6, 0.25)
 
 out = out[: at(TOTAL)]
 out = np.tanh(out * 0.9) * 0.8

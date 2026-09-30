@@ -3,6 +3,7 @@ import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {clamp, ease, pop, prog, rand, typed} from '../anim';
 import {Bg, IkaMark, Mono} from '../components/ui';
 import {C, FONT, MONO} from '../theme';
+import {at} from '../timeline';
 
 const RAY_COLORS = [C.pink, C.violet, C.cyan, C.lime, C.yellow, C.coral];
 
@@ -52,7 +53,8 @@ export const HelloScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
   const sel = prog(f, 70, 16);
   const selOut = prog(f, d - 16, 12);
-  const jp = pop(f, 100);
+  const jp = pop(f, at('hello', 'japanese', -3));
+  const sq = pop(f, at('hello', 'squid', -3), {damping: 8, stiffness: 260});
   const w = 290;
   const h = 330;
   return (
@@ -129,9 +131,11 @@ export const HelloScene: React.FC<{d: number}> = ({d}) => {
         }}
       >
         <div style={{fontFamily: "'WenQuanYi Zen Hei', sans-serif", fontSize: 64, color: '#fff', fontWeight: 700}}>イカ</div>
-        <Mono size={24} color={C.pinkSoft}>
-          = squid
-        </Mono>
+        <div style={{transform: `scale(${sq})`, transformOrigin: '0% 50%'}}>
+          <Mono size={30} color={C.pinkSoft}>
+            = squid
+          </Mono>
+        </div>
       </div>
     </AbsoluteFill>
   );
@@ -140,7 +144,8 @@ export const HelloScene: React.FC<{d: number}> = ({d}) => {
 /* 3 ─ Welcome to Ika */
 export const WelcomeScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const word = interpolate(f, [18, 44], [0, 1], {...clamp, easing: ease});
+  const wAt = at('welcome', 'ikaWelcome', -6);
+  const word = interpolate(f, [wAt, wAt + 22], [0, 1], {...clamp, easing: ease});
   const bars = [C.pink, C.violet, C.cyan, C.lime, C.yellow];
   const exit = prog(f, d - 12, 12, (v) => v * v);
   return (
@@ -148,7 +153,7 @@ export const WelcomeScene: React.FC<{d: number}> = ({d}) => {
       <Bg color={C.ink} dots="rgba(255,255,255,0.05)" />
       <div style={{position: 'absolute', left: 900, top: 330, transform: `translateY(${exit * -40}px)`, opacity: 1 - exit}}>
         <div style={{fontFamily: MONO, fontSize: 34, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.04em', height: 44}}>
-          {typed('welcome to', f, 2, 26)}
+          {typed('welcome to', f, at('welcome', 'welcome', -4), 30)}
           <span style={{opacity: Math.floor(f / 15) % 2 ? 0 : 1}}>_</span>
         </div>
         <div style={{overflow: 'hidden', height: 290}}>
@@ -168,7 +173,7 @@ export const WelcomeScene: React.FC<{d: number}> = ({d}) => {
         </div>
         <div style={{display: 'flex', gap: 14, marginTop: 26}}>
           {bars.map((c, i) => {
-            const t = prog(f, 40 + i * 5, 20);
+            const t = prog(f, wAt + 14 + i * 4, 18);
             return <div key={i} style={{width: 92 * t, height: 12, borderRadius: 6, background: c}} />;
           })}
         </div>

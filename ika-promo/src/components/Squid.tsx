@@ -12,6 +12,7 @@ type Props = {
   tilt?: number; // degrees
   seed?: number;
   energy?: number; // tentacle wiggle multiplier
+  talk?: number; // 0..1 voice level for lip-sync
   style?: React.CSSProperties;
 };
 
@@ -75,6 +76,7 @@ export const Squid: React.FC<Props> = ({
   tilt = 0,
   seed = 0,
   energy = 1,
+  talk = 0,
   style,
 }) => {
   const f = useCurrentFrame() + seed * 37;
@@ -144,6 +146,15 @@ export const Squid: React.FC<Props> = ({
   };
 
   const mouth = (() => {
+    if (talk > 0.12) {
+      const o = Math.min(1, talk);
+      return (
+        <g>
+          <ellipse cx={120} cy={167 + o * 2} rx={10 + o * 3} ry={3 + o * 9} fill={OUT} />
+          <ellipse cx={120} cy={171 + o * 6} rx={5 + o * 2} ry={1.5 + o * 2.5} fill="#FF8FB1" />
+        </g>
+      );
+    }
     switch (expression) {
       case 'wow':
         return <ellipse cx={120} cy={170} rx={9} ry={11} fill={OUT} />;

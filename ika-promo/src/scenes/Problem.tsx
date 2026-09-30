@@ -3,6 +3,7 @@ import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {clamp, ease, pop, prog, rand} from '../anim';
 import {Bg, Label, Line, Mono, Pill} from '../components/ui';
 import {C, FONT, MONO} from '../theme';
+import {at} from '../timeline';
 
 /* A floating "junk" card in the web3 collage */
 const Junk: React.FC<{x: number; y: number; start: number; rot: number; children: React.ReactNode; bg?: string; w?: number; depth?: number}> = ({
@@ -45,7 +46,8 @@ const Bar: React.FC<{w: number; c?: string; h?: number}> = ({w, c = '#E7E4EC', h
 /* 4 ─ "Moving crypto in 2026: wrap it, bridge it… and pray." */
 export const StatusScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const shake = f > 150 && f < 162 ? Math.sin(f * 3) * 6 : 0;
+  const prayAt = at('status', 'pray');
+  const shake = f > prayAt && f < prayAt + 12 ? Math.sin(f * 3) * 6 : 0;
   return (
     <AbsoluteFill>
       <Bg color={C.paper} dots="rgba(10,9,13,0.08)" vignette={false} />
@@ -95,22 +97,22 @@ export const StatusScene: React.FC<{d: number}> = ({d}) => {
       <div style={{position: 'absolute', left: 120, top: 130, transform: `translateX(${shake}px)`}}>
         <Label n="00" text="Web3, currently" color={C.coral} dark={false} start={4} />
         <div style={{height: 24}} />
-        <Line start={10} size={118} color={C.ink}>
+        <Line start={at('status', 'moving', -3)} size={118} color={C.ink}>
           Moving crypto
         </Line>
-        <Line start={16} size={118} color={C.ink}>
+        <Line start={at('status', 'twenty', -6)} size={118} color={C.ink}>
           in 2026:
         </Line>
         <div style={{display: 'flex', gap: 18, marginTop: 56, alignItems: 'center'}}>
-          <Pill start={70} bg={C.violet} size={70} rot={-3}>
+          <Pill start={at('status', 'wrap', -3)} bg={C.violet} size={70} rot={-3}>
             Wrap it.
           </Pill>
-          <Pill start={100} bg={C.cyan} color={C.ink} size={70} rot={2}>
+          <Pill start={at('status', 'bridge', -3)} bg={C.cyan} color={C.ink} size={70} rot={2}>
             Bridge it.
           </Pill>
         </div>
         <div style={{marginTop: 22, marginLeft: 120}}>
-          <Pill start={146} bg={C.pink} size={96} rot={-4}>
+          <Pill start={at('status', 'andPray', -3)} bg={C.pink} size={96} rot={-4}>
             …and pray. 🙏
           </Pill>
         </div>
@@ -128,14 +130,16 @@ const HACKS = [
 
 export const DrainedScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const hits = HACKS.map((_, i) => 34 + i * 26);
-  const lastHit = hits.filter((h) => f >= h).pop() ?? -100;
+  const hits = [at('drained', 'later', 4), at('drained', 'bridges', 2), at('drained', 'still', 2)];
+  const drainedAt = at('drained', 'drained');
+  const lastHit = [...hits, drainedAt].filter((h) => f >= h).pop() ?? -100;
   const k = f - lastHit;
   const shake = k >= 0 && k < 10 ? (1 - k / 10) * 14 : 0;
   const sx = Math.sin(f * 2.3) * shake;
   const sy = Math.cos(f * 3.1) * shake;
+  const lastCard = hits.filter((h) => f >= h).pop() ?? -100;
   const total = HACKS.reduce((a, h, i) => a + (f >= hits[i] ? h.amt : 0), 0);
-  const shown = Math.round(interpolate(f, [lastHit, lastHit + 16], [total - (HACKS.find((_, i) => hits[i] === lastHit)?.amt ?? 0), total], clamp));
+  const shown = Math.round(interpolate(f, [lastCard, lastCard + 16], [total - (HACKS.find((_, i) => hits[i] === lastCard)?.amt ?? 0), total], clamp));
   const flash = k >= 0 && k < 6 ? (1 - k / 6) * 0.25 : 0;
 
   return (
@@ -146,10 +150,10 @@ export const DrainedScene: React.FC<{d: number}> = ({d}) => {
       <div style={{position: 'absolute', left: 120, top: 220}}>
         <Label n="!!" text="Meanwhile" color={C.red} start={0} />
         <div style={{height: 24}} />
-        <Line start={4} size={130}>
+        <Line start={at('drained', 'billions', -3)} size={130}>
           Billions
         </Line>
-        <Line start={10} size={130} color={C.red}>
+        <Line start={drainedAt - 4} size={130} color={C.red} dur={14}>
           drained.
         </Line>
         <div style={{marginTop: 50, fontFamily: MONO, fontSize: 30, color: 'rgba(255,255,255,0.6)'}}>

@@ -3,6 +3,7 @@ import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {pop, prog, rand} from '../anim';
 import {Bg, IkaMark, Mono} from '../components/ui';
 import {C, FONT} from '../theme';
+import {at} from '../timeline';
 
 const Slam: React.FC<{text: string; start: number; color?: string; strike?: boolean; size?: number}> = ({
   text,
@@ -41,25 +42,26 @@ const Slam: React.FC<{text: string; start: number; color?: string; strike?: bool
 /* 11 ─ No bridges. No wrapping. Just ink. */
 export const SlamScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
-  const A = 0;
-  const B = 62;
-  const Cc = 124;
+  const A = at('slam', 'no1', -2);
+  const B = at('slam', 'no2', -4);
+  const Cc = at('slam', 'just', -4);
+  const inkAt = at('slam', 'ink', -2);
   if (f < B)
     return (
       <AbsoluteFill>
         <Bg color={C.pink} dots="rgba(255,255,255,0.12)" />
-        <Slam text="NO BRIDGES." start={A + 2} strike />
+        <Slam text="NO BRIDGES." start={A} strike />
       </AbsoluteFill>
     );
   if (f < Cc)
     return (
       <AbsoluteFill>
         <Bg color={C.violet} dots="rgba(255,255,255,0.12)" />
-        <Slam text="NO WRAPPING." start={B + 2} strike size={230} />
+        <Slam text="NO WRAPPING." start={B + 4} strike size={230} />
       </AbsoluteFill>
     );
   // JUST INK. with ink droplet confetti
-  const k = f - Cc;
+  const k = f - inkAt + 4;
   return (
     <AbsoluteFill>
       <Bg color={C.lime} dots="rgba(10,9,13,0.1)" />
@@ -83,7 +85,7 @@ export const SlamScene: React.FC<{d: number}> = ({d}) => {
           );
         })}
       </svg>
-      <Slam text="JUST INK." start={Cc + 2} color={C.ink} size={280} />
+      <Slam text="JUST INK." start={Cc + 4} color={C.ink} size={280} />
     </AbsoluteFill>
   );
 };
@@ -92,10 +94,10 @@ export const SlamScene: React.FC<{d: number}> = ({d}) => {
 export const EndScene: React.FC<{d: number}> = ({d}) => {
   const f = useCurrentFrame();
   const ring = prog(f, 0, 50);
-  const mark = pop(f, 6);
-  const word = prog(f, 14, 24);
-  const tag = prog(f, 34, 24);
-  const url = prog(f, 50, 24);
+  const mark = pop(f, at('end', 'ikaEnd', -4));
+  const word = prog(f, at('end', 'ikaEnd', 2), 22);
+  const tag = prog(f, at('end', 'sign', -4), 20);
+  const url = prog(f, at('end', 'anyChainEnd', 12), 24);
   return (
     <AbsoluteFill>
       <Bg color={C.ink} dots="rgba(255,255,255,0.04)" />
